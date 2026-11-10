@@ -8,8 +8,7 @@ from datetime import datetime, timezone, date, timedelta
 from api.garmin import get_garmin_activities,get_garmin_activity
 from api.ai_service import get_ai_advice
 
-DB_PATH = "running_coach.db"
-#DB_PATH = os.getenv("DB_PATH", "data/database.db")
+DB_PATH = os.getenv("DB_PATH", "data/database.db")
 
 app = FastAPI()
 
@@ -52,8 +51,11 @@ def sync_garmin_data():
                 activity_details.get("summaryDTO", {}).get("directWorkoutFeel"),
                 activity_details.get("summaryDTO", {}).get("directWorkoutRpe")
             ))
-        if activity["distance"] >= longest_run["distance_meters"]:
-            longest_run = update_longest_run(longest_run["distance_meters"], started_at.isoformat())
+        # Only runs count (running, trail_running, treadmill_running, virtual_run, ...)
+        type_key = activity.get("activityType", {}).get("typeKey") or ""
+        distance = activity.get("distance") or 0
+        if "run" in type_key and distance >= (longest_run["distance_meters"] or 0):
+            longest_run = update_longest_run(distance, started_at.isoformat())
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             "UPDATE garmin_token SET last_sync_at = ? WHERE ID = 1",
@@ -171,14 +173,13 @@ def update_settings(date_of_birth: str, sex: str, language: str, goal_name: str,
             "UPDATE user_profile SET date_of_birth = ?, sex = ?, language = ?, goal_name = ?, goal_event = ?, goal_distance_meters = ?, goal_target_time_seconds = ?, goal_date = ? WHERE ID = 1",
             (date_of_birth, sex, language, goal_name, goal_event, goal_distance_meters, goal_target_time_seconds, goal_date)
         )
-    user = get_settings()
-    return user
+    return get_settings()
 
 @app.get("/longest-run", tags=["user"])
 def get_longest_run():
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
-        longest_run = conn.execute("SELECT longest_run_distance_meters, longest_run_date FROM user_profile WHERE id = 1").fetchone()
+        longest_run = conn.execute("SELECT ROUND(longest_run_distance_meters,0) AS longest_run_distance_meters, longest_run_date FROM user_profile WHERE id = 1").fetchone()
     return {"distance_meters": longest_run["longest_run_distance_meters"], "date": longest_run["longest_run_date"]}
 
 @app.put("/longest-run", tags=["user"])
@@ -188,8 +189,7 @@ def update_longest_run(distance_meters: int, date: str):
             "UPDATE user_profile SET longest_run_distance_meters = ?, longest_run_date = ? WHERE ID = 1",
             (distance_meters, date)
         )
-    longest_run = get_longest_run()
-    return longest_run
+    return get_longest_run()
 
 @app.get("/personal-records", tags=["user"])
 def get_personal_records():
@@ -197,6 +197,15 @@ def get_personal_records():
         conn.row_factory = sqlite3.Row
         rows = conn.execute("SELECT id, name, distance_meters, time_seconds, date FROM personal_records ORDER BY distance_meters ASC").fetchall()
     return [dict(row) for row in rows]
+
+@app.put("/personal-records/{record_id}", tags=["user"])
+def update_personal_records(record_id: int, time_seconds: int, date: str):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "UPDATE personal_records SET time_seconds = ?, date = ? WHERE id = ?",
+            (time_seconds, date, record_id)
+        )
+    return get_personal_records()
 
 @app.get("/health", tags=["health"])
 def health_check():

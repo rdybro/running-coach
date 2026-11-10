@@ -1,4 +1,4 @@
-import { RefreshCw, AlertTriangle, CalendarDays, Target, ClipboardList, Timer } from 'lucide-react'
+import { RefreshCw, AlertTriangle, CalendarDays, Target, ClipboardList, Timer, MessageSquareText } from 'lucide-react'
 import Card from '../components/Card'
 import GoalProgress from '../components/GoalProgress'
 import RecommendedSession from '../components/RecommendedSession'
@@ -6,6 +6,7 @@ import RecommendedSession from '../components/RecommendedSession'
 export default function Dashboard({ goal, advice, createdAt, loading, error, onRefresh, hasLoaded }) {
   const sessions = advice?.recommended_sessions?.slice(0, 3) || []
   const adjustments = advice?.plan_adjustments || []
+  const lastRunFeedback = typeof advice?.feedback_on_last_run === 'string' ? advice.feedback_on_last_run.trim() : ''
 
   return (
     <main className="page">
@@ -26,7 +27,21 @@ export default function Dashboard({ goal, advice, createdAt, loading, error, onR
       {!hasLoaded && loading && <LoadingState />}
       {hasLoaded && advice && (
         <>
+          {typeof advice.warning === 'string' && advice.warning.trim() !== '' && (
+            <Card className="warnings-card">
+              <div className="section-kicker"><AlertTriangle size={15} /> WARNING</div>
+              <p className="card-copy">{advice.warning}</p>
+            </Card>
+          )}
+
           <GoalProgress progress={advice.goal_progress} />
+
+          {lastRunFeedback && (
+            <Card className="feedback-card">
+              <div className="section-kicker"><MessageSquareText size={15} /> FEEDBACK ON LAST RUN</div>
+              <p className="card-copy">{lastRunFeedback}</p>
+            </Card>
+          )}
 
           <div className="section-heading">
             <div>
@@ -45,20 +60,27 @@ export default function Dashboard({ goal, advice, createdAt, loading, error, onR
             <Card><p className="muted">No sessions recommended right now.</p></Card>
           )}
 
-          {adjustments.length > 0 && (
-            <Card className="adjustments-card">
-              <div className="section-kicker"><ClipboardList size={15} /> PLAN ADJUSTMENTS</div>
-              <ul className="adjustment-list">
-                {adjustments.map((adjustment, index) => <li key={index}>{adjustment}</li>)}
-              </ul>
-            </Card>
-          )}
-
-          {typeof advice.warning === 'string' && advice.warning.trim() !== '' && (
-            <Card className="warnings-card">
-              <div className="section-kicker"><AlertTriangle size={15} /> WARNING</div>
-              <p className="card-copy">{advice.warning}</p>
-            </Card>
+          <div className="section-heading">
+            <div>
+              <div className="eyebrow">KEEP ON TRACK</div>
+              <h2>Plan adjustments<span className="accent-dot">.</span></h2>
+            </div>
+            <span className="count-label">{adjustments.length}</span>
+          </div>
+          {adjustments.length > 0 ? (
+            <div className="session-list">
+              {adjustments.map((adjustment, index) => (
+                <Card key={index} className="session-card adjustment-card">
+                  <div className="session-title-wrap">
+                    <span className="session-index">0{index + 1}</span>
+                    <ClipboardList size={15} className="adjustment-icon" />
+                  </div>
+                  <p className="card-copy">{adjustment}</p>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card><p className="muted">No plan adjustments right now.</p></Card>
           )}
           {createdAt && <p className="updated-note">Last updated {formatDateTime(createdAt)}</p>}
         </>

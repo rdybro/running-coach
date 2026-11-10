@@ -42,7 +42,7 @@ npm install
 npm run dev
 ```
 
-Vite serves on <http://localhost:5173> and proxies `/coach` to the API on port 8000. See `frontend/README.md` for the API response contract.
+Vite serves on <http://localhost:5173> and proxies `/coach` and `/personal-records` to the API on port 8000. `npm run build` writes the static site to `frontend/dist/`.
 
 ## Docker
 
@@ -50,7 +50,7 @@ Vite serves on <http://localhost:5173> and proxies `/coach` to the API on port 8
 docker compose up -d
 ```
 
-Pulls `ghcr.io/rdybro/running-coach-api` and `ghcr.io/rdybro/running-coach-frontend`. The UI is served on <http://localhost:8080>, and nginx proxies `/coach` to the API. Data is mounted from `./data`.
+Pulls `ghcr.io/rdybro/running-coach-api` and `ghcr.io/rdybro/running-coach-frontend`. The UI is served on <http://localhost:8080>, and nginx proxies `/coach` and `/personal-records` to the API. Data is mounted from `./data`.
 
 ## API endpoints
 
@@ -62,7 +62,58 @@ Pulls `ghcr.io/rdybro/running-coach-api` and `ghcr.io/rdybro/running-coach-front
 | `GET` | `/training-context` | The context sent to the LLM |
 | `GET` / `PUT` | `/settings` | User profile and goal |
 | `GET` / `PUT` | `/longest-run` | Longest run record |
+| `GET` | `/personal-records` | Personal records |
+| `PUT` | `/personal-records/{id}` | Update a record's time and date (JSON body `{"time_seconds", "date"}`; both `null` clears it) |
 | `GET` | `/health` | Health check |
+
+## `/coach` response contract
+
+`GET /coach` and `POST /coach` return the same structure. The frontend reads the goal from `training_context.profile.goal` and the coaching advice from `ai_advice`. If this changes, update `api/ai_model.py`, the frontend and this section together.
+
+```json
+{
+  "created_at": "2026-11-02T21:17:29.488098+00:00",
+  "training_context": {
+    "profile": {
+      "response_language": "english",
+      "goal": {
+        "goal_name": "Aalborg Halvmarathon",
+        "goal_distance_meters": 21097,
+        "goal_target_time_seconds": 7200,
+        "goal_date": "2027-05-02",
+        "goal_days_remaining": 181
+      }
+    }
+  },
+  "ai_advice": {
+    "goal_progress": {
+      "score": 75,
+      "trend": "stable",
+      "explanation": "Progress is appropriate for the current training phase."
+    },
+    "feedback_on_last_run": "A controlled easy run with a steady heart rate.",
+    "recommended_sessions": [
+      {
+        "type": "easy_run",
+        "distance_km": 8,
+        "duration_minutes": 45,
+        "description": "Keep the effort comfortable and conversational."
+      },
+      {
+        "type": "strength",
+        "distance_km": null,
+        "duration_minutes": 30,
+        "description": "A short, controlled full-body strength session."
+      }
+    ],
+    "plan_adjustments": ["Move the long run to Sunday to allow recovery after Thursday's intervals."],
+    "warning": null
+  }
+}
+```
+
+- `recommended_sessions`: at most 3. Supported `type` values: `easy_run`, `quality_run`, `long_run`, `strength`.
+- `warning`: `null` or a string. When set, it is shown as a red card at the top of the dashboard.
 
 ## Database
 

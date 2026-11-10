@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Activity, Settings as SettingsIcon } from 'lucide-react'
+import { Activity, Settings as SettingsIcon, Trophy } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
+import PersonalRecords from './pages/PersonalRecords'
 import Settings from './pages/Settings'
+
+const navItems = [
+  { id: 'home', label: 'Home', icon: Activity },
+  { id: 'records', label: 'Records', icon: Trophy },
+  { id: 'settings', label: 'Settings', icon: SettingsIcon },
+]
 import { getAdvice, refreshAdvice } from './services/api'
 
 export default function App() {
@@ -48,7 +55,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="app-content">
-        {page === 'home' ? (
+        {page === 'home' && (
           <Dashboard
             goal={goal}
             advice={advice}
@@ -58,20 +65,23 @@ export default function App() {
             onRefresh={handleRefresh}
             hasLoaded={hasLoaded}
           />
-        ) : (
-          <Settings goal={goal} onBack={() => setPage('home')} />
         )}
+        {page === 'records' && <PersonalRecords />}
+        {page === 'settings' && <Settings goal={goal} onBack={() => setPage('home')} />}
       </div>
 
       <nav className="bottom-nav" aria-label="Main navigation">
-        <button className={`nav-item ${page === 'home' ? 'active' : ''}`} onClick={() => setPage('home')}>
-          <Activity size={19} />
-          <span>Home</span>
-        </button>
-        <button className={`nav-item ${page === 'settings' ? 'active' : ''}`} onClick={() => setPage('settings')}>
-          <SettingsIcon size={19} />
-          <span>Settings</span>
-        </button>
+        {navItems.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            className={`nav-item ${page === id ? 'active' : ''}`}
+            onClick={() => setPage(id)}
+            aria-current={page === id ? 'page' : undefined}
+          >
+            <Icon size={20} />
+            <span>{label}</span>
+          </button>
+        ))}
       </nav>
     </div>
   )

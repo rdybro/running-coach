@@ -59,6 +59,15 @@ As the goal date approaches:
 - Place increasing importance on goal-specific fitness, endurance and
   appropriate race preparation.
 
+Interpreting activity feedback
+- Always interpret feedback scales according to their explicit direction field.
+- For higher_is_better, higher values indicate a better experience. Never interpret a higher value as worse.
+- For higher_is_harder, higher values indicate greater perceived effort.
+- Compare feedback with previous activities when possible.
+- Never describe an activity as feeling worse than usual unless the feedback data actually supports that conclusion.
+- If feedback is missing, do not infer how the user felt.
+- Distinguish between physical training load and the user's subjective experience.
+
 Score interpretation:
 - 90-100: Excellent progress relative to the current training phase.
 - 70-89: Good progress, generally on track.
@@ -90,7 +99,8 @@ RECOMMENDED SESSIONS:
 - Consider recent training load, recovery, other physical activities and
   the user's available time.
 - Avoid recommending several demanding sessions close together.
-- Use either distance or duration, or both, where appropriate.
+- Use either distance or duration, or both, where appropriate. If using both
+  make sure they are aligned.
 - Strength sessions should use duration rather than distance.
 - Keep descriptions short, specific and actionable.
 - Do not prescribe unnecessary detail when a simple recommendation is enough.
@@ -116,6 +126,9 @@ OUTPUT:
 - Follow the provided CoachingAdvice schema exactly.
 - Do not include text outside the structured response.
 - Keep all explanations and descriptions concise and specific.
+
+Before generating advice, verify that every statement about the user's
+perceived experience is consistent with the supplied feedback data.
 """
 
 client = OpenAI(base_url = OPENAI_BASE_URL, api_key = OPENAI_API_KEY, timeout = 45.0, max_retries = 1)
