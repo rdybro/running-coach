@@ -1,0 +1,14 @@
+{
+    "folders": [
+		{
+			"name": "Running Coach",
+			"path": "."
+		}
+	],
+	"extensions": {
+		"recommendations": [
+			"ms-python.python","fastapilabs.fastapi-vscode","github.vscode-pull-request-github"
+		]
+	},
+	"settings": {}
+}
