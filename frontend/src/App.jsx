@@ -3,13 +3,13 @@ import { Activity, Settings as SettingsIcon, Trophy } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import PersonalRecords from './pages/PersonalRecords'
 import Settings from './pages/Settings'
+import { getAdvice, refreshAdvice } from './services/api'
 
 const navItems = [
   { id: 'home', label: 'Home', icon: Activity },
   { id: 'records', label: 'Records', icon: Trophy },
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ]
-import { getAdvice, refreshAdvice } from './services/api'
 
 export default function App() {
   const [page, setPage] = useState('home')
@@ -67,7 +67,7 @@ export default function App() {
           />
         )}
         {page === 'records' && <PersonalRecords />}
-        {page === 'settings' && <Settings goal={goal} onBack={() => setPage('home')} />}
+        {page === 'settings' && <Settings onBack={() => setPage('home')} />}
       </div>
 
       <nav className="bottom-nav" aria-label="Main navigation">

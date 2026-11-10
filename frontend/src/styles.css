@@ -135,6 +135,13 @@ h3 { font-size: 16px; letter-spacing: -.02em; margin: 0; }
 .goal-target svg { color: var(--accent); }
 
 /* Personal records */
+.form-field + .form-field { margin-top: 12px; }
+.form-field .field-label { margin-top: 0; }
+.setting-value { text-align: right; }
+.longest-run-card { padding: 21px; margin-bottom: 15px; border-color: #414a35; background: linear-gradient(145deg, #22291d, #1c211b 68%); }
+.longest-run-distance { font-family: 'Space Grotesk', sans-serif; font-size: 44px; line-height: 1; font-weight: 700; letter-spacing: -.05em; color: var(--accent); margin: 16px 0 14px; }
+.longest-run-distance span { color: var(--muted); font-size: 18px; font-weight: 500; letter-spacing: 0; }
+.auto-badge { border-radius: 999px; padding: 5px 8px; background: #30372d; color: #d0d5c9; font-size: 9px; font-weight: 700; letter-spacing: .08em; }
 .record-icon { color: var(--accent); }
 .small-icon-button { width: 40px; height: 40px; border-radius: 12px; }
 .record-pace { color: var(--muted); font-size: 12px; }

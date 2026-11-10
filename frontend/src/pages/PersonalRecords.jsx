@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, CalendarDays, Pencil, Timer, Trophy } from 'lucide-react'
+import { AlertTriangle, CalendarDays, Pencil, Route, Timer, Trophy } from 'lucide-react'
 import Card from '../components/Card'
-import { getPersonalRecords, updatePersonalRecord } from '../services/api'
+import TimeInput, { joinDuration, splitDuration } from '../components/TimeInput'
+import { getLongestRun, getPersonalRecords, updatePersonalRecord } from '../services/api'
 
 export default function PersonalRecords() {
   const [records, setRecords] = useState(null)
+  const [longestRun, setLongestRun] = useState(null)
   const [error, setError] = useState('')
   const [editingId, setEditingId] = useState(null)
 
@@ -12,6 +14,10 @@ export default function PersonalRecords() {
     getPersonalRecords()
       .then(setRecords)
       .catch((err) => setError(err.message || 'Could not load personal records.'))
+    // Loaded separately, so a failure here doesn't hide the records
+    getLongestRun()
+      .then(setLongestRun)
+      .catch(() => setLongestRun(null))
   }, [])
 
   const handleSaved = (saved) => {
@@ -31,6 +37,8 @@ export default function PersonalRecords() {
       {error && <div className="error-banner" role="alert"><AlertTriangle size={17} /><span>{error}</span></div>}
       {!records && !error && <div className="loading-state"><div className="loader" /><p>Loading records…</p></div>}
 
+      {Number(longestRun?.distance_meters) > 0 && <LongestRunCard longestRun={longestRun} />}
+
       {records && (
         <div className="session-list">
           {records.map((record) => (
@@ -47,6 +55,26 @@ export default function PersonalRecords() {
       )}
       <p className="settings-footnote">Records are included in the training context the coach uses.</p>
     </main>
+  )
+}
+
+function LongestRunCard({ longestRun }) {
+  const km = Number(longestRun.distance_meters) / 1000
+
+  return (
+    <Card className="longest-run-card">
+      <div className="goal-overview-top">
+        <div className="section-kicker"><Route size={15} /> LONGEST RUN</div>
+        <span className="auto-badge">AUTO</span>
+      </div>
+      <div className="longest-run-distance">
+        {km.toLocaleString('en-GB', { maximumFractionDigits: 2 })}<span> km</span>
+      </div>
+      {longestRun.date && (
+        <div className="goal-detail"><CalendarDays size={15} /><span>{formatDate(longestRun.date.slice(0, 10))}</span></div>
+      )}
+      <p className="progress-context">Updated automatically from Garmin.</p>
+    </Card>
   )
 }
 
@@ -83,87 +111,48 @@ function RecordCard({ record, editing, onEdit, onCancel, onSaved }) {
 }
 
 function RecordForm({ record, onCancel, onSaved }) {
-  const initial = splitDuration(record.time_seconds)
-  const [hours, setHours] = useState(initial.hours)
-  const [minutes, setMinutes] = useState(initial.minutes)
-  const [seconds, setSeconds] = useState(initial.seconds)
+  const [time, setTime] = useState(() => splitDuration(record.time_seconds))
   const [date, setDate] = useState(record.date || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const save = async (payload) => {
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    const total = joinDuration(time)
+    if (total <= 0) {
+      setError('Enter a time greater than zero.')
+      return
+    }
+    if (!date) {
+      setError('Pick a date.')
+      return
+    }
     setSaving(true)
     setError('')
     try {
-      onSaved(await updatePersonalRecord(record.id, payload))
+      onSaved(await updatePersonalRecord(record.id, { time_seconds: total, date }))
     } catch (err) {
       setError(err.message || 'Could not save the record.')
       setSaving(false)
     }
   }
 
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    const total = Number(hours || 0) * 3600 + Number(minutes || 0) * 60 + Number(seconds || 0)
-    if (total <= 0) {
-      setError('Enter a time greater than zero.')
-      return
-    }
-    save({ time_seconds: total, date: date || null })
-  }
-
   return (
     <form className="record-form" onSubmit={handleSubmit}>
       <div className="field-label">Time</div>
-      <div className="time-fields">
-        <TimeInput label="h" value={hours} onChange={setHours} max={99} />
-        <TimeInput label="m" value={minutes} onChange={setMinutes} max={59} />
-        <TimeInput label="s" value={seconds} onChange={setSeconds} max={59} />
-      </div>
+      <TimeInput {...time} onChange={setTime} />
 
       <label className="field-label" htmlFor={`date-${record.id}`}>Date</label>
-      <input id={`date-${record.id}`} className="text-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      <input id={`date-${record.id}`} className="text-input" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
 
       {error && <p className="form-error" role="alert">{error}</p>}
 
       <div className="form-actions">
         <button type="submit" className="primary-button" disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
         <button type="button" className="secondary-button" onClick={onCancel} disabled={saving}>Cancel</button>
-        {Number(record.time_seconds) > 0 && (
-          <button type="button" className="text-button" onClick={() => save({ time_seconds: null, date: null })} disabled={saving}>Clear</button>
-        )}
       </div>
     </form>
   )
-}
-
-function TimeInput({ label, value, onChange, max }) {
-  return (
-    <label className="time-input">
-      <input
-        className="text-input"
-        type="number"
-        inputMode="numeric"
-        min="0"
-        max={max}
-        placeholder="0"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        aria-label={{ h: 'Hours', m: 'Minutes', s: 'Seconds' }[label]}
-      />
-      <span>{label}</span>
-    </label>
-  )
-}
-
-function splitDuration(totalSeconds) {
-  const total = Number(totalSeconds)
-  if (!Number.isFinite(total) || total <= 0) return { hours: '', minutes: '', seconds: '' }
-  return {
-    hours: String(Math.floor(total / 3600)),
-    minutes: String(Math.floor((total % 3600) / 60)),
-    seconds: String(total % 60),
-  }
 }
 
 function formatDuration(totalSeconds) {

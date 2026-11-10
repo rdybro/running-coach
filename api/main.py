@@ -164,7 +164,7 @@ def get_settings():
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         user = conn.execute("SELECT date_of_birth, sex, language, goal_name, goal_event, goal_distance_meters, goal_target_time_seconds, goal_date FROM user_profile WHERE id = 1").fetchone()
-    return user
+    return dict(user)
 
 @app.put("/settings", tags=["user"])
 def update_settings(date_of_birth: str, sex: str, language: str, goal_name: str, goal_event: str, goal_distance_meters: int, goal_target_time_seconds: int, goal_date: str):
@@ -198,14 +198,24 @@ def get_personal_records():
         rows = conn.execute("SELECT id, name, distance_meters, time_seconds, date FROM personal_records ORDER BY distance_meters ASC").fetchall()
     return [dict(row) for row in rows]
 
+@app.get("/personal-records/{record_id}", tags=["user"])
+def get_personal_record(record_id: int):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT id, name, distance_meters, time_seconds, date FROM personal_records WHERE id = ?",
+            (record_id,)
+        ).fetchone()
+    return dict(row)
+
 @app.put("/personal-records/{record_id}", tags=["user"])
-def update_personal_records(record_id: int, time_seconds: int, date: str):
+def update_personal_record(record_id: int, time_seconds: int, date: str):
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             "UPDATE personal_records SET time_seconds = ?, date = ? WHERE id = ?",
             (time_seconds, date, record_id)
         )
-    return get_personal_records()
+    return get_personal_record(record_id)
 
 @app.get("/health", tags=["health"])
 def health_check():
