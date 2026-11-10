@@ -68,7 +68,7 @@ export default function Settings({ onBack }) {
           </SettingsSection>
         </>
       )}
-      <p className="settings-footnote">Language and goal changes are used from the next coaching advice.</p>
+      <p className="settings-footnote">Profile and goal changes are used from the next coaching advice.</p>
     </main>
   )
 }

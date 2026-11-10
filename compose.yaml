@@ -14,11 +14,8 @@ services:
     image: ghcr.io/rdybro/running-coach-api:latest
     container_name: running-coach-api
     restart: unless-stopped
+    env_file: .env
     environment:
-      GARMIN_API_KEY: 'abc'
-      OPENAI_API_KEY: 'def'
-      OPENAI_BASE_URL: 'ghi'
-      OPENAI_MODEL: 'mistral-small-3.2-24b-instruct-2506'
       DB_PATH: /data/database.db
     volumes:
       - ./data:/data

@@ -32,4 +32,5 @@ Personal, single-user AI running coach. Flow: Garmin personal API → SQLite →
 - The `api/Dockerfile` CMD runs `main:app` from inside `api/`, which doesn't match the `api.*` imports.
 - No schema file exists, so a fresh clone can't create the database.
 - `.env.example` doesn't list `DB_PATH`.
+- The dropdowns (`<select>`) on the Settings page use the browser's default styling and should be made to fit the app's design. Not a priority right now.
 - `update_personal_records` (`PUT /personal-records/{record_id}`) needs hardening, not a priority right now: an unknown id returns 200 instead of 404, `time_seconds` and `date` aren't validated, a record can't be cleared, and the `date` parameter shadows the `datetime.date` import.
