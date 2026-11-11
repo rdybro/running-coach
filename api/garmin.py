@@ -4,7 +4,7 @@ import sqlite3
 import httpx
 from datetime import datetime
 
-DB_PATH = os.getenv("DB_PATH", "data/database.db")
+from api.database import DB_PATH
 
 GARMIN_API_KEY = os.environ["GARMIN_API_KEY"]
 GARMIN_BASE_URL = os.getenv("GARMIN_BASE_URL", "https://personal.connectapi.garmin.com")

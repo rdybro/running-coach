@@ -1,16 +1,20 @@
 from fastapi import FastAPI,HTTPException
 
-import os
 import sqlite3
 import json
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone, date, timedelta
 
+from api.database import DB_PATH, init_db
 from api.garmin import get_garmin_activities,get_garmin_activity
 from api.ai_service import get_ai_advice
 
-DB_PATH = os.getenv("DB_PATH", "data/database.db")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 @app.post("/garmin-data")
 def sync_garmin_data():

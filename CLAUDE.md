@@ -4,7 +4,7 @@ Personal, single-user AI running coach. Flow: Garmin personal API → SQLite →
 
 ## Layout
 
-- `api/`: FastAPI with raw `sqlite3`. Routes and the training context are in `main.py`, the Garmin client in `garmin.py`, the prompt and LLM client in `ai_service.py`, and the output schema (`CoachingAdvice`) in `ai_model.py`
+- `api/`: FastAPI with raw `sqlite3`. Routes and the training context are in `main.py`, the Garmin client in `garmin.py`, the prompt and LLM client in `ai_service.py`, and the output schema (`CoachingAdvice`) in `ai_model.py`. The database schema and seed rows are in `schema.sql`, which `init_db()` in `database.py` runs on every startup, so every statement in it must be idempotent
 - `frontend/`: React + Vite + lucide-react, plain CSS, no router. API calls are in `src/services/api.js`
 - `compose.yaml`: deployment with prebuilt images from `ghcr.io/rdybro/`. nginx (`frontend/nginx.conf`) proxies `/api/` to the API
 
@@ -29,8 +29,8 @@ Personal, single-user AI running coach. Flow: Garmin personal API → SQLite →
 - Session type mismatch: `ai_model.py` uses `intensity_run`, while the frontend expects `quality_run`.
 - `POST /coach` crashes when `ai_advice` is empty (`row` is `None`).
 - Longest-run check: `get_longest_run` rounds the stored distance to whole metres, but `sync_garmin_data` compares the raw activity distance against it with `>=`. A slightly shorter run (e.g. 10020.2 m vs a stored 10020.4 m) can therefore replace the record and lower it. Replacing the date on an equal distance is intended, so the record stays fresh.
-- The `api/Dockerfile` CMD runs `main:app` from inside `api/`, which doesn't match the `api.*` imports.
-- No schema file exists, so a fresh clone can't create the database.
+- Both containers run as root, not a priority right now. The planned fix: the API gets an entrypoint script that reads `PUID`/`PGID` env vars, adjusts the `app` user, chowns `/data` and drops privileges with `gosu`, the same pattern as linuxserver.io images (needed for Synology). `entrypoint.sh` must have LF line endings. The frontend moves to `nginxinc/nginx-unprivileged` and listens on 8080 in the container, with compose mapping `"80:8080"`.
+- On a fresh database the profile is empty, so `/training-context` (and therefore `POST /coach`) crashes on `date.fromisoformat(None)` until the settings have been filled in.
 - `.env.example` doesn't list `DB_PATH`.
 - The dropdowns (`<select>`) on the Settings page use the browser's default styling and should be made to fit the app's design. Not a priority right now.
 - `update_personal_records` (`PUT /personal-records/{record_id}`) needs hardening, not a priority right now: an unknown id returns 200 instead of 404, `time_seconds` and `date` aren't validated, a record can't be cleared, and the `date` parameter shadows the `datetime.date` import.
