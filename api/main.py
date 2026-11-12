@@ -2,12 +2,15 @@ from fastapi import FastAPI,HTTPException
 
 import sqlite3
 import json
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone, date, timedelta
 
 from api.database import DB_PATH, init_db
 from api.garmin import get_garmin_activities,get_garmin_activity
 from api.ai_service import get_ai_advice
+
+RETRY_LIMIT_HOURS = os.getenv("RETRY_LIMIT_HOURS", 6)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -147,7 +150,7 @@ def update_coaching_advice():
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute("SELECT created_at FROM ai_advice ORDER BY created_at DESC LIMIT 1").fetchone()
-    retry_after = datetime.fromisoformat(row["created_at"]) + timedelta(hours=24)
+    retry_after = datetime.fromisoformat(row["created_at"]) + timedelta(hours=RETRY_LIMIT_HOURS)
     if retry_after > datetime.fromisoformat(created_at):
         raise HTTPException(status_code=429,detail="Too many requests.")
     training_context = build_training_context()
