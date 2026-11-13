@@ -82,6 +82,7 @@ def build_training_context():
     recent_activities = [dict(row) for row in recent_activities]
     longest_run = get_longest_run()
     personal_records = get_personal_records()
+    previous_advice = get_coaching_advice()
     return {
         "profile": {"age": age, "sex": user_profile["sex"], "response_language": user_profile["language"],
             "goal": {"goal_name": user_profile["goal_name"], "goal_event": user_profile["goal_event"], "goal_distance_meters": user_profile["goal_distance_meters"], "goal_target_time_seconds": user_profile["goal_target_time_seconds"], "goal_date": user_profile["goal_date"], "goal_days_remaining": (date.fromisoformat(user_profile["goal_date"]) - date.today()).days},
@@ -96,6 +97,15 @@ def build_training_context():
         "feedback_scales": {
             "feel": {"min": 0, "max": 100, "direction": "higher_is_better"},
             "perceived_effort": {"min": 0, "max": 100, "direction": "higher_is_harder"}
+        },
+        "previous_advice": {
+            "created_at": previous_advice["created_at"],
+            "days_ago": (datetime.now(timezone.utc) - datetime.fromisoformat(previous_advice["created_at"])).days,
+            "goal_progress": previous_advice["ai_advice"]["goal_progress"],
+            "recommended_sessions": previous_advice["ai_advice"]["recommended_sessions"],
+            "plan_adjustments": previous_advice["ai_advice"]["plan_adjustments"],
+            "warning": previous_advice["ai_advice"]["warning"],
+            "motivation": previous_advice["ai_advice"].get("motivation")
         }
     }
 
