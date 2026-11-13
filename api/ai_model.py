@@ -14,6 +14,7 @@ class RecommendedSession(BaseModel):
 
 class CoachingAdvice(BaseModel):
     goal_progress: GoalProgress
+    motivation: str
     feedback_on_last_run: str
     recommended_sessions: list[RecommendedSession] = Field(max_length=3)
     plan_adjustments: list[str]

@@ -59,6 +59,8 @@ h3 { font-size: 16px; letter-spacing: -.02em; margin: 0; }
 .warnings-card .section-kicker svg { color: #ff6b5a; }
 .warnings-card .card-copy { color: #ffd6cf; }
 .warnings-card .card-copy + .card-copy { margin-top: 8px; }
+.motivation-card { border-left: 3px solid var(--accent); background: linear-gradient(135deg, #222a1c, var(--surface) 70%); }
+.motivation-copy { color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.5; letter-spacing: -.01em; margin: 12px 0 0; }
 .updated-note { text-align: center; color: #737b6e; font-size: 10px; margin: 22px 0 0; }
 .error-banner { display: flex; gap: 9px; align-items: flex-start; padding: 12px 14px; border: 1px solid #69443c; background: #30201e; color: #ffc0b4; border-radius: 13px; font-size: 12px; line-height: 1.5; margin: -10px 0 15px; }
 .error-banner svg { flex: 0 0 auto; }

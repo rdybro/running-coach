@@ -1,4 +1,4 @@
-import { RefreshCw, AlertTriangle, CalendarDays, Target, ClipboardList, Timer, MessageSquareText } from 'lucide-react'
+import { RefreshCw, AlertTriangle, CalendarDays, Target, ClipboardList, Timer, MessageSquareText, Quote } from 'lucide-react'
 import Card from '../components/Card'
 import GoalProgress from '../components/GoalProgress'
 import RecommendedSession from '../components/RecommendedSession'
@@ -7,6 +7,7 @@ export default function Dashboard({ goal, advice, createdAt, loading, error, onR
   const sessions = advice?.recommended_sessions?.slice(0, 3) || []
   const adjustments = advice?.plan_adjustments || []
   const lastRunFeedback = typeof advice?.feedback_on_last_run === 'string' ? advice.feedback_on_last_run.trim() : ''
+  const motivation = typeof advice?.motivation === 'string' ? advice.motivation.trim() : ''
 
   return (
     <main className="page">
@@ -31,6 +32,13 @@ export default function Dashboard({ goal, advice, createdAt, loading, error, onR
             <Card className="warnings-card">
               <div className="section-kicker"><AlertTriangle size={15} /> WARNING</div>
               <p className="card-copy">{advice.warning}</p>
+            </Card>
+          )}
+
+          {motivation && (
+            <Card className="motivation-card">
+              <div className="section-kicker"><Quote size={15} /> FROM YOUR COACH</div>
+              <p className="motivation-copy">{motivation}</p>
             </Card>
           )}
 
