@@ -34,3 +34,4 @@ Personal, single-user AI running coach. Flow: Garmin personal API → SQLite →
 - `.env.example` doesn't list `DB_PATH`.
 - The dropdowns (`<select>`) on the Settings page use the browser's default styling and should be made to fit the app's design. Not a priority right now.
 - `update_personal_records` (`PUT /personal-records/{record_id}`) needs hardening, not a priority right now: an unknown id returns 200 instead of 404, `time_seconds` and `date` aren't validated, a record can't be cleared, and the `date` parameter shadows the `datetime.date` import.
+- Feature idea, plan adherence: the coach has no memory of its own previous advice, so it can't tell whether the plan was followed. When building the training context, compare the planned sessions in the latest `ai_advice` response with the activities synced since then, and add a short planned / done / deviation section to the prompt, so the advice can adapt (e.g. scale back after repeatedly skipped quality runs).

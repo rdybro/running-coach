@@ -8,7 +8,7 @@ from datetime import datetime, timezone, date, timedelta
 
 from api.database import DB_PATH, init_db
 from api.garmin import get_garmin_activities,get_garmin_activity
-from api.ai_service import get_ai_advice
+from api.ai_service import get_ai_advice, SYSTEM_PROMPT, OPENAI_MODEL
 
 RETRY_LIMIT_HOURS = os.getenv("RETRY_LIMIT_HOURS", 6)
 
@@ -157,12 +157,14 @@ def update_coaching_advice():
     ai_advice = get_ai_advice(training_context)
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
-            INSERT INTO ai_advice (created_at, prompt, response)
-            VALUES (?, ?, ?)
+            INSERT INTO ai_advice (created_at, system_prompt, prompt, response, openai_model)
+            VALUES (?, ?, ?, ?, ?)
         """,(
             created_at,
+            SYSTEM_PROMPT,
             json.dumps(training_context, ensure_ascii=False),
-            json.dumps(ai_advice, ensure_ascii=False)
+            json.dumps(ai_advice, ensure_ascii=False),
+            OPENAI_MODEL
         ))
     return {"created_at": created_at, "training_context": training_context, "ai_advice": ai_advice}
 

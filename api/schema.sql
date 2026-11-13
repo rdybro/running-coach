@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS "ai_advice" (
 	"system_prompt"	TEXT,
 	"prompt"	TEXT NOT NULL,
 	"response"	TEXT NOT NULL,
+	"openai_model" TEXT,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 
